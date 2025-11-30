@@ -14,6 +14,8 @@ public class MazeGenerator : MonoBehaviour
 
     public GameObject player;
 
+    public GameObject enemy;
+
     const int N = 1;
     const int E = 2;
     const int S = 4;
@@ -40,9 +42,10 @@ public class MazeGenerator : MonoBehaviour
         cell_walls[new Vector2(-1, 0)] = W;
 
         MakeMaze();
-
+/*
         GameObject p = GameObject.Instantiate(player);
         p.transform.position = new Vector3(2.91f, 1f, 4.6f);
+*/
     }
 
     private List<Vector2> CheckNeighbors(Vector2 cell, List<Vector2> unvisited) {
@@ -86,7 +89,7 @@ public class MazeGenerator : MonoBehaviour
 
             if (neighbors.Count > 0)
             {
-                Vector2 next = neighbors[UnityEngine.Random.RandomRange(0, neighbors.Count)];
+                Vector2 next = neighbors[UnityEngine.Random.Range(0, neighbors.Count)];
                 stack.Add(current);
 
                 Vector2 dir = next - current;
@@ -111,6 +114,9 @@ public class MazeGenerator : MonoBehaviour
 
             
         }
+        
+        // Reset enemiesRemaining to 0 in case this is being run after losing
+        Variables.Application.Set("enemiesRemaining", 0);
 
         for (int i = 0; i < width; i++)
         {
@@ -120,10 +126,19 @@ public class MazeGenerator : MonoBehaviour
                 GameObject tile = GameObject.Instantiate(tiles[map[i][j]]);
                 tile.transform.parent = gameObject.transform;
 
-                tile.transform.Translate(new Vector3 (j*tile_size, 0, i * tile_size));
+                tile.transform.Translate(new Vector3 (j * tile_size, 0, i * tile_size));
                 tile.name += " " + i.ToString() + ' ' + j.ToString();
                 tile.GetComponentInChildren<NavMeshSurface>().BuildNavMesh();
-               
+
+                // Spawn enemies
+                if ((j % 2 == 0) && (i + j != 0)) { // Every second tile, excluding (0, 0) where player starts
+                    GameObject e = GameObject.Instantiate(enemy, new Vector3(j * tile_size + 5, 0, i * tile_size + 5), Quaternion.identity);
+                    e.transform.parent = gameObject.transform;
+
+                    Variables.Application.Set("enemiesRemaining", (int)Variables.Application.Get("enemiesRemaining") + 1);
+                
+                }
+
             }
 
         }
